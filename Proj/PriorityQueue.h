@@ -7,6 +7,7 @@ using namespace std;
 class PQEntry {
 public:
     string id;
+    int degree;
     int score;
     PQEntry * next;
     PQEntry * prev;
@@ -17,8 +18,9 @@ public:
         next = nullptr;
         prev = nullptr;
     }
-    PQEntry(string id) {
+    PQEntry(string id, int degree) {
         this -> id = id;
+        this -> degree = degree;
         score = 0;
         this -> next = nullptr;
         this -> prev = nullptr;
@@ -40,9 +42,7 @@ public:
         if (input -> University == temp -> University) this -> score += 25;
         if (input -> Workplace == temp -> Workplace) this -> score += 12;
 
-        for (auto x: input -> Connections) {
-            if (temp -> id == x) this -> score += 6;
-        }
+        this ->score += degree;
 
     }
 

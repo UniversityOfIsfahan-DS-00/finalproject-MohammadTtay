@@ -16,12 +16,12 @@
 using namespace std;
 using json = nlohmann::json;
 
-void SaveConnections(int, string, string, map < string, vector < string >> & , set < string > & );
+void SaveConnections(int, string, string, map < string, vector < string >> & , map < string, int > & );
 int readFiles(vector < Users * > & Database, map < string, vector < string >> & graph);
 prirityQueue * buildPQ(string, vector < Users * > & , set < string > & );
 void printSuggestions(prirityQueue * & , vector < Users * > & );
-void AddUser(vector < Users * >&,map < string, vector < string >>&);
-void suggestions(vector < Users * >&,map < string, vector < string >>&);
+void AddUser(vector < Users * > & , map < string, vector < string >> & );
+void suggestions(vector < Users * > & , map < string, vector < string >> & );
 
 int main() {
     vector < Users * > Database;
@@ -46,10 +46,10 @@ int main() {
 
         switch (firstPage) {
         case 1:
-            suggestions(Database,graph);
+            suggestions(Database, graph);
             break;
         case 2:
-            AddUser(Database,graph);
+            AddUser(Database, graph);
             break;
         case 3:
             exit(0);
@@ -63,32 +63,12 @@ int main() {
         }
 
     }
-    while (true) {
-        system("cls");
-        string id;
-        cout << "Enter The ID:";
-        cin >> id;
-        set < string > Connections;
-
-        SaveConnections(5, id, "-1", graph, Connections); //Get Connections Of Input ID (Till Degree 5 ) & Save It In A Set
-        Connections.erase(id);
-
-        prirityQueue * List = buildPQ(id, Database, Connections);
-
-        printSuggestions(List, Database);
-
-        cout << "\nESC--->Finish\nReturn--->Back";
-        char c = getch();
-
-        if (c == 27) return 0;
-        if (c == 13) continue;
-    }
 
     return 0;
 }
 
 int readFiles(vector < Users * > & Database, map < string, vector < string >> & graph) {
-    ifstream file("../users.json");
+    ifstream file("../users2.json");
     if (file.is_open()) {
         char temp;
         string tempLine;
@@ -111,12 +91,16 @@ int readFiles(vector < Users * > & Database, map < string, vector < string >> & 
 
 }
 
-void SaveConnections(int k, string node, string parent, map < string, vector < string >> & graph, set < string > & Connections) {
+void SaveConnections(int k, string node, string parent, map < string, vector < string >> & graph, map < string, int > & Connections) {
 
     if (k < 0)
         return;
 
-    Connections.insert(node);
+    if (Connections.find(node) == Connections.end()) {
+        Connections.insert(pair < string, int > (node, k + 1));
+    } else {
+        if (Connections[node] < k + 1) Connections[node] = k + 1;
+    }
 
     for (const auto & i: graph[node]) {
 
@@ -127,7 +111,7 @@ void SaveConnections(int k, string node, string parent, map < string, vector < s
     }
 }
 
-prirityQueue * buildPQ(string inputID, vector < Users * > & Database, set < string > & Connections) {
+prirityQueue * buildPQ(string inputID, vector < Users * > & Database, map < string, int > & Connections) {
     prirityQueue * tmpPQ = new prirityQueue;
     Users * inputUser = new Users;
     for (auto x: Database) {
@@ -137,7 +121,7 @@ prirityQueue * buildPQ(string inputID, vector < Users * > & Database, set < stri
         }
     }
     for (const auto & x: Connections) {
-        PQEntry * tmpEntry = new PQEntry(x);
+        PQEntry * tmpEntry = new PQEntry(x.first, x.second);
         tmpEntry -> CalcScore(inputUser, Database);
         tmpPQ -> Enqueue(tmpEntry);
     }
@@ -145,13 +129,13 @@ prirityQueue * buildPQ(string inputID, vector < Users * > & Database, set < stri
 }
 
 void printSuggestions(prirityQueue * & List, vector < Users * > & Database) {
-    cout <<"\n.:Suggestions:.\n\n";
+    cout << "\n.:Suggestions:.\n\n";
     for (int i = 0; i < 20; i++) {
         int score = List -> frontScore();
         string tmpID = List -> Dequeue();
         for (auto x: Database) {
             if (x -> id == tmpID) {
-                x -> printData();
+                x->printData();
                 cout << "Score:" << score << "\n\n";
                 break;
             }
@@ -159,82 +143,81 @@ void printSuggestions(prirityQueue * & List, vector < Users * > & Database) {
     }
 }
 
-void AddUser(vector < Users * >& Database,map < string, vector < string >>& graph){
+void AddUser(vector < Users * > & Database, map < string, vector < string >> & graph) {
 
-    Users* newUser = new Users;
-    string id,Name,Birthday;
+    Users * newUser = new Users;
+    string id, Name, Birthday;
     string University, FOStudy, Workplace;
     string Skills;
     string Connections;
 
     system("cls");
-    while(true){
+    while (true) {
         cout << "ID:\n";
         cin >> id;
-        if(graph.find("id")!=graph.end()) cout << "This ID is exist.Enter Another ID\n";
+        if (graph.find(id) != graph.end()) cout << ".:This ID is exist.Enter Another ID.:\n\n";
         else break;
     }
-    newUser->id=id;
+    newUser -> id = id;
     cin.ignore();
 
     cout << "Name:\n";
-    getline(cin,Name);
-    newUser->Name=Name;
+    getline(cin, Name);
+    newUser -> Name = Name;
 
     cout << "Birthday:\n";
-    getline(cin,Birthday);
-    newUser->Birthday=Birthday;
+    getline(cin, Birthday);
+    newUser -> Birthday = Birthday;
 
     cout << "University:\n";
-    getline(cin,University);
-    newUser->University=University;
+    getline(cin, University);
+    newUser -> University = University;
 
     cout << "Field Of Study:\n";
-    getline(cin,FOStudy);
-    newUser->FOStudy=FOStudy;
+    getline(cin, FOStudy);
+    newUser -> FOStudy = FOStudy;
 
     cout << "Workplace:\n";
-    getline(cin,Workplace);
-    newUser->Workplace=Workplace;
+    getline(cin, Workplace);
+    newUser -> Workplace = Workplace;
 
     cout << "Skills(EX :QT,C++ programming) :\n";
-    getline(cin,Skills);
+    getline(cin, Skills);
     QString temp = QString::fromStdString(Skills);
-    QStringList tmpList =temp.split(",");
-    for(const auto &x :qAsConst(tmpList)){
-        newUser->Skills.push_back(x.toStdString());
+    QStringList tmpList = temp.split(",");
+    for (const auto & x: qAsConst(tmpList)) {
+        newUser -> Skills.push_back(x.toStdString());
     }
 
     cout << "Connections ID:(EX :84,2,5) :\n";
-    getline(cin,Connections);
+    getline(cin, Connections);
     temp = QString::fromStdString(Connections);
-    tmpList =temp.split(",");
-    for(const auto &x :qAsConst(tmpList)){
-        for(auto &y : Database){
-            if(y->id==x.toStdString()){
-                y->Connections.push_back(id);
+    tmpList = temp.split(",");
+    for (const auto & x: qAsConst(tmpList)) {
+        for (auto & y: Database) {
+            if (y -> id == x.toStdString()) {
+                y -> Connections.push_back(id);
                 break;
             }
         }
-        newUser->Connections.push_back(x.toStdString());
+        newUser -> Connections.push_back(x.toStdString());
     }
 
     Database.push_back(newUser);
-    graph[id]=newUser->Connections;
+    graph[id] = newUser -> Connections;
 
     cout << "\n\nPress Any Key to Go Back...";
     getch();
     system("cls");
 
-
 }
-void suggestions(vector < Users *>& Database,map < string, vector < string >>& graph){
+void suggestions(vector < Users * > & Database, map < string, vector < string >> & graph) {
 
     system("cls");
     string id;
     cout << "Enter The ID:";
     cin >> id;
-    set < string > Connections;
+    map < string, int > Connections;
 
     SaveConnections(5, id, "-1", graph, Connections); //Get Connections Of Input ID (Till Degree 5 ) & Save It In A Set
     Connections.erase(id);
