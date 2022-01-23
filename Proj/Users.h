@@ -41,12 +41,12 @@ public:
         cout << "Workplace:" << this -> Workplace << endl;
 
         cout << "Skills:" << endl;
-        for (auto y: this -> Skills) cout << y << " ";
+        for (auto y: this -> Skills) cout << y << "/";
         cout << endl;
 
         cout << "Connections:" << endl;
         for (auto y: this -> Connections) cout << y << " ";
-        cout << "\n\n";
+        cout << "\n";
     }
 
 };
